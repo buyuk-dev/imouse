@@ -1,0 +1,34 @@
+[
+    {
+        "type": "title",
+        "title": "iMouse Settings"
+    },
+    {
+        "type": "numeric",
+        "title": "Mouse Spped",
+        "desc": "Change mouse movement speed factor",
+        "section": "general",
+        "key": "mouse_speed"
+    },
+    {
+        "type": "numeric",
+        "title": "Gyro LP Alpha",
+        "desc": "Gryoscope low pass filter alpha parameter",
+        "section": "general",
+        "key": "gyro_lp_alpha"
+    },
+    {
+        "type": "numeric",
+        "title": "Acc LP Alpha",
+        "desc": "Accelerometer low pass filter alpha parameter",
+        "section": "general",
+        "key": "acc_lp_alpha"
+    },
+    {
+        "type": "string",
+        "title": "Server Address",
+        "desc": "Server ip address and port after colon: ip:port",
+        "section": "general",
+        "key": "server_address"
+    }
+]
