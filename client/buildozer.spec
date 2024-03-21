@@ -1,22 +1,23 @@
 [app]
 
 # (str) Title of your application
-title = AccelerometerKivyTest
+title = iMouse
 
 # (str) Package name
 package.name = imouse
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.test.buyuk.imouse
+package.domain = org.buyuk.imouse
 
 # (str) Source code where the main.py live
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,json
+source.include_exts = py,json
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
+#source.include_patterns = ../common/*.py
 
 # (list) Source files to exclude (let empty to not exclude anything)
 #source.exclude_exts = spec
@@ -29,7 +30,7 @@ source.include_exts = py,png,jpg,kv,atlas,json
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.3
+version = 0.4
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -96,7 +97,7 @@ fullscreen = 1
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options-1 for all the supported syntaxes and properties)
 #android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,HIGH_SAMPLING_RATE_SENSORS
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host

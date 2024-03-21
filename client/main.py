@@ -1,9 +1,10 @@
 import os
 import sys
+import traceback
 
 from pathlib import Path
 project_root_path = str(Path(__file__).absolute().parent.parent)
-#print(project_root_path)
+print("mmichalski", project_root_path)
 sys.path.append(project_root_path)
 
 import socket
@@ -21,16 +22,15 @@ from kivy.uix.label import Label
 from kivy.uix.settings import SettingsWithSidebar
 
 from common.command import Command
-from client.config import Config
 from common.math import device_space_to_world_space, LowPassFilter, Constants
-from client.sensors import *
+from sensors import *
 
 from numpy.typing import NDArray
 from typing import Any, Callable
 
 
 def get_vec_info_str(header:str, vec:NDArray) -> str:
-    return f"{header}: " + " | ".join(vec)
+    return f"{header}: " + " | ".join([f"{x:.3f}" for x in vec])
 
 
 class MouseProcessorThread(threading.Thread):
@@ -68,17 +68,16 @@ class MouseProcessorThread(threading.Thread):
             address, port = self.config.get("general", "server_address").split(":")
             connection.connect((address, int(port)))
 
-            self.gyro_filter = LowPassFilter(float(self.config.get('general', 'gyro_lp_alpha')))
+            self.threshold = float(self.config.get('general', 'acc_threshold'))
+            self.mouse_speed = float(self.config.get('general', 'mouse_speed'))
+            self.movement_time = float(self.config.get('general', 'inactive_time'))
+
             self.acc_filter = LowPassFilter(float(self.config.get('general', 'acc_lp_alpha')))
-
             self.speed = np.zeros(3)
-            self.orientation = np.zeros(3)
-            self.position = np.zeros(3)
-
             self.prev_raw_acc = np.zeros(3)
-            self.prev_raw_gyro = np.zeros(3)
-
             self.prev_time = time.time()
+            
+            print(f"michalski: mouse_speed: {self.mouse_speed}")
 
             self.thread_running.set()
             while self.thread_running.is_set():
@@ -86,46 +85,44 @@ class MouseProcessorThread(threading.Thread):
                     self.step(connection)        
                 except Exception as e:
                     print(f"michalski: error in processor step: {e}")
+                    print(traceback.format_exc())
+                    self.stop_thread()
     
     def step(self, connection):
         """
         Compute control signal and send mouse command to the server.
         """
         raw_acc = get_acc_reading(self.acc_filter)
-        raw_gyro = get_gyro_reading(self.gyro_filter)
+        raw_acc[np.abs(raw_acc) < self.threshold] = .0
         curr_time = time.time()
 
         dt_time = curr_time - self.prev_time
-        dt_acc = raw_acc - self.prev_raw_acc
-        dt_gyro = raw_gyro - self.prev_raw_gyro
-
+        self.movement_time += dt_time
         self.prev_time = curr_time
-        self.prev_raw_acc = raw_acc
-        self.prev_raw_gyro = raw_gyro
+        self.speed += raw_acc[:3] * dt_time
 
-        self.orientation += raw_gyro * dt_time
-
-        self.world_acc = device_space_to_world_space(raw_acc, self.orientation) - Constants.EARTH_ACC
-        self.speed += self.world_acc * dt_time
+        if (raw_acc[:2] == 0).all() and self.movement_time > .25:
+            print("michalski: reseting speed, device at rest for more than 0.1s")
+            self.speed = np.zeros(3)
+            self.movement_time = .0
 
         delta_pos = self.speed * dt_time
-        self.position += delta_pos
-
-        mouse_move = delta_pos * float(self.config.get('general', 'mouse_speed'))
+        mouse_move = delta_pos * self.mouse_speed
 
         info_text_lines = [
             get_vec_info_str("Raw Accelerometer", raw_acc),
-            get_vec_info_str("World Accelerometer", self.world_acc),
-            get_vec_info_str("Position", self.position),
-            get_vec_info_str("Orientation", self.orientation),
-            get_vec_info_str("Delta Position", delta_pos)
+            get_vec_info_str("Speed", self.speed),
+            get_vec_info_str("Delta Position", delta_pos),
+            get_vec_info_str("Mouse Move", mouse_move),
         ]
+
+        print(f"michalski:\n{info_text_lines}")
 
         if self.set_info_text:
             Clock.schedule_once(lambda dt: self.set_info_text(os.linesep.join(info_text_lines)), 0)
 
         cmd = Command(dx=mouse_move[0], dy=mouse_move[1])
-        cmd.send_command(connection)
+        cmd.send(connection)
         cmd.wait_for_ack(connection)
 
 
@@ -173,29 +170,32 @@ class MouseClientApp(App):
         self.main_layout.add_widget(self.open_settings_btn)
 
     def on_start(self):
+        print("mmichalski: on_start()")
         self.processor = None
         self.open_settings()
 
     def close_settings(self, *args, **kwargs):
+        print("mmichalski: close_settings()")
         super().close_settings(*args, **kwargs)
+
         def set_info_label_text(info):
             self.label.text = info
-        
-        if self.processor:
-            print("mmichalski: stopping processor thread")
-            self.processor.stop_thread()
-            self.processor.join()
-            print("mmichalski: processor thread stopped")
+    
+        self.on_stop()
 
         self.processor = MouseProcessorThread(self.config, set_info_label_text)
-        self.processor.run()
+        self.processor.start()
 
     def build_config(self, config):
+        print("mmichalski: build_config()")
         config.setdefaults('general', {
             'mouse_speed': 100.0,
             'gyro_lp_alpha': np.pi / 90.0,
             'acc_lp_alpha': 0.1,
-            'server_address': "localhost:5000"
+            'acc_threshold': 0.5,
+            'inactive_time': 0.25,
+            #'server_address': "localhost:5000"
+            'server_address': "192.168.8.24:5000"
         })
 
     def build_settings(self, settings):
@@ -206,7 +206,12 @@ class MouseClientApp(App):
         print(f"michalski: Config changed: {section}, {key}, {value}")
 
     def on_stop(self):
-        self.processor.stop_thread()
+        print("mmichalski: on_stop()")
+        if self.processor:
+            print("mmichalski: stopping processor thread")
+            self.processor.stop_thread()
+            self.processor.join()
+            print("mmichalski: processor thread stopped")
 
 
 if __name__ == '__main__':

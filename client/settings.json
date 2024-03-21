@@ -25,6 +25,20 @@
         "key": "acc_lp_alpha"
     },
     {
+        "type": "numeric",
+        "title": "Acc Threshold",
+        "desc": "Accelerometer reading threshold, readings below this value are zeroed.",
+        "section": "general",
+        "key": "acc_threshold"
+    },
+    {
+        "type": "numeric",
+        "title": "Inactive Time Threshold",
+        "desc": "When accelerometer doesn't detect any acceleration within this time period we reset mouse state.",
+        "section": "general",
+        "key": "inactive_time"
+    },
+    {
         "type": "string",
         "title": "Server Address",
         "desc": "Server ip address and port after colon: ip:port",

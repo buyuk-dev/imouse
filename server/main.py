@@ -4,7 +4,6 @@ Mouse Server (Must be running on the device which will be controlled using the a
 import sys
 from pathlib import Path
 project_root_path = str(Path(__file__).absolute().parent.parent)
-#print(project_root_path)
 sys.path.append(project_root_path)
 
 import socket
@@ -18,7 +17,8 @@ class MouseController:
     def __init__(self):
         self.mouse = Controller()
 
-    def apply_commmand(self, command: Command):
+    def apply_command(self, command: Command):
+        print(command.asjson())
         self.mouse.move(command.dx, command.dy)
 
 
@@ -60,4 +60,6 @@ class MouseServerApp:
 
 if __name__ == '__main__':
     app = MouseServerApp()
-    app.run()
+
+    while True:
+        app.run()
