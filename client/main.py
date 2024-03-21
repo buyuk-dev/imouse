@@ -70,10 +70,12 @@ class MouseProcessorThread(threading.Thread):
 
             self.threshold = float(self.config.get('general', 'acc_threshold'))
             self.mouse_speed = float(self.config.get('general', 'mouse_speed'))
-            self.movement_time = float(self.config.get('general', 'inactive_time'))
+            self.inactive_time = float(self.config.get('general', 'inactive_time'))
+            self.movement_time = 0.0
 
             self.acc_filter = LowPassFilter(float(self.config.get('general', 'acc_lp_alpha')))
             self.speed = np.zeros(3)
+            self.prev_speed = np.zeros(3)
             self.prev_raw_acc = np.zeros(3)
             self.prev_time = time.time()
             
@@ -99,14 +101,17 @@ class MouseProcessorThread(threading.Thread):
         dt_time = curr_time - self.prev_time
         self.movement_time += dt_time
         self.prev_time = curr_time
-        self.speed += raw_acc[:3] * dt_time
+        self.speed += 0.5 * (raw_acc + self.prev_raw_acc) * dt_time
 
-        if (raw_acc[:2] == 0).all() and self.movement_time > .25:
-            print("michalski: reseting speed, device at rest for more than 0.1s")
+        self.prev_raw_acc = raw_acc
+
+        if (raw_acc[:2] == 0).all() and self.movement_time > self.inactive_time:
+            print(f"michalski: reseting speed, device at rest for more than {self.inactive_time}s")
             self.speed = np.zeros(3)
+            self.prev_speed = np.zeros(3)
             self.movement_time = .0
 
-        delta_pos = self.speed * dt_time
+        delta_pos = 0.5 * (self.prev_speed + self.speed) * dt_time
         mouse_move = delta_pos * self.mouse_speed
 
         info_text_lines = [
@@ -189,10 +194,10 @@ class MouseClientApp(App):
     def build_config(self, config):
         print("mmichalski: build_config()")
         config.setdefaults('general', {
-            'mouse_speed': 100.0,
+            'mouse_speed': 1000.0,
             'gyro_lp_alpha': np.pi / 90.0,
             'acc_lp_alpha': 0.1,
-            'acc_threshold': 0.5,
+            'acc_threshold': 0.2,
             'inactive_time': 0.25,
             #'server_address': "localhost:5000"
             'server_address': "192.168.8.24:5000"

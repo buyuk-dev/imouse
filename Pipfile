@@ -9,6 +9,7 @@ pynput = "*"
 kivy = "*"
 plyer = "*"
 numpy = "*"
+matplotlib = "*"
 
 [dev-packages]
 
