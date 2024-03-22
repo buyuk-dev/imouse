@@ -1,0 +1,10 @@
+{
+    "address": "0.0.0.0:5000",
+    "plot": {
+        "figsize": [2000, 800],
+        "dpi": 100,
+        "npoints": 1000,
+        "scale": [-2.0, 2.0],
+        "refresh_interval": 100
+    }
+}

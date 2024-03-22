@@ -37,6 +37,12 @@ class Command:
         socket.sendall(self.asjson().encode('utf-8'))
 
     @classmethod
+    def recv(cls, connection:socket):
+        data = connection.recv(64).decode('utf-8')
+        connection.sendall("ACK".encode("utf-8"))
+        return cls.from_json(data)
+
+    @classmethod
     def wait_for_ack(cls, socket:socket):
         ack = socket.recv(8).decode('utf-8')
         if ack == "ACK":
