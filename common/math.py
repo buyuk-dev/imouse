@@ -51,5 +51,4 @@ class LowPassFilter:
         return filtered_value
     
     def reset(self):
-        self.previous_filtered = np.array([0.0, 0.0, 0.0])
-
+        self.previous_filtered = np.zeros(3)

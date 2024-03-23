@@ -30,11 +30,11 @@ class Command:
         data = json.loads(json_str)
         return Command(**data)
 
-    def send(self, socket:socket):
+    def send(self, connection:socket):
         """
         Encode command as json and send over socket.
         """
-        socket.sendall(self.asjson().encode('utf-8'))
+        connection.sendall(self.asjson().encode('utf-8'))
 
     @classmethod
     def recv(cls, connection:socket):
@@ -43,8 +43,8 @@ class Command:
         return cls.from_json(data)
 
     @classmethod
-    def wait_for_ack(cls, socket:socket):
-        ack = socket.recv(8).decode('utf-8')
+    def wait_for_ack(cls, connection:socket):
+        ack = connection.recv(8).decode('utf-8')
         if ack == "ACK":
             return True
         else:

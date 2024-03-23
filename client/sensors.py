@@ -1,74 +1,111 @@
+import json
+from dataclasses import dataclass
+from pathlib import Path
+import time
+from typing import Any, Optional
+
 import numpy as np
+from kivy.logger import Logger
+from numpy.typing import NDArray
 from plyer import accelerometer, gyroscope
+#from abc import ABC, abstractmethod
 
 
-acc_calibration_data = {
-  "offset": np.array([
-    -0.11411178872940386,
-    -0.14229462696955775,
-    9.734940837024975,
-  ]),
-  "gains": np.array([
-    1.004352956783392,
-    1.0048621553145678,
-    1.0
-    #7.932018502444785e-05,
-  ]),
-  "angles": np.array([
-    -0.00013014404704852112,
-    -1.5916878246580541,
-    -89.99544557473384,
-  ])
-}
+@dataclass
+class SensorCalibrationData:
+    offset: NDArray
+    gains: NDArray
+    angles: NDArray
+
+    def from_json(cls, path="calibration.json") -> 'SensorCalibrationData':
+        path = Path(path)
+        data = json.loads(path.read_text())
+        return SensorCalibrationData(
+            offset=np.array(data["offset"]),
+            gains=np.array(data["gains"]),
+            angles=np.array(data["angles"]),
+        )
 
 
-def init_gyroscope():
-    """
-    Try to initialize gyroscope.
-    """
-    try:
-        gyroscope.enable()
-    except Exception as e:
-        print(f"michalski: Failed to enable gyroscope: {e}")
+@dataclass
+class SensorReading:
+    timestamp: float
+    data: NDArray
 
 
-def init_accelerometer():
-    """
-    Try to initialize accelerometer.
-    """
-    try:
-        accelerometer.enable()
-    except Exception as e:
-        print(f"michalski: failed to enable accelerometer: {e}")
+class Sensor:
+    def __init__(self, sensor:Any, name:str):
+        self.sensor:Any = sensor
+        self.name:str = name
+        self.calibration_data:Optional[SensorCalibrationData] = None
 
+    def calibrate(self, calibration_data_path):
+        self.calibration_data = SensorCalibrationData.from_json(calibration_data_path)
 
-
-def get_acc_reading(filter_=None):
-    """
-    Return acceleration readings if available [ m/s*s ]
-    """
-    acc_raw = accelerometer.acceleration[:3]
-    if acc_raw and all(acc_raw):
-        reading = np.array(acc_raw)
-    else:
-        reading = np.zeros(3)
-    if filter_ is not None:
-        reading = filter_.apply(reading)
-
-    return (reading - acc_calibration_data["offset"]) / acc_calibration_data["gains"]
-
-
-def get_gyro_reading(filter_=None):
-    """
-    Return gyroscope readings (roll, pitch, yaw) [ rad / s ]
-    """
-    rotation_raw = gyroscope.rotation[:3]
-    if rotation_raw and all(rotation_raw):
-        reading = np.array(rotation_raw)
-    else:
-        reading = np.zeros(3)
+    def enable(self):
+        try:
+            self.sensor.enable()
+        except Exception as e:
+            Logger.exception(f"Failed to enable sensor: {self.name}")
     
-    if filter_:
-        reading = filter_.apply(reading)
+    def disable(self):
+        self.sensor.disable()
 
-    return reading
+    def correct(self, reading:NDArray):
+        if self.calibration_data:
+            return (reading - self.calibration_data.offset) / self.calibration_data.gains
+        else:
+            return reading
+
+    def read(self, correct:bool=True) -> SensorReading:
+        reading = self.read_raw()
+        timestamp = time.time()
+
+        if reading and all(reading):
+            reading = np.array(reading)
+        else:
+            reading = np.zeros(3)
+
+        if correct:
+            reading = self.correct(reading)
+
+        return SensorReading(timestamp=timestamp, data=reading)
+
+    def read_raw(self):
+        raise NotImplementedError()
+
+
+class Accelerometer(Sensor):
+    def __init__(self):
+        super().__init__(accelerometer, "acc")
+        self.calibrate("calibration.json")
+
+    def read_raw(self):
+        """
+        Return acceleration readings if available [ m/s*s ]
+        """
+        return self.sensor.acceleration[:3]
+
+
+class DummySensor(Sensor):
+
+    class Dummy:
+        def enable(self): pass
+        def disable(self): pass
+
+    def __init__(self):
+        super().__init__(self.Dummy(), "dummy_sensor")
+    
+    def read_raw(self):
+        return np.random.random(3).tolist()
+
+
+class Gyroscope(Sensor):
+    def __init__(self):
+        super().__init__(gyroscope, "gyro")
+    
+    def read_raw(self):
+        """
+        Return gyroscope readings (roll, pitch, yaw) [ rad / s ]
+        """
+        return gyroscope.rotation[:3]

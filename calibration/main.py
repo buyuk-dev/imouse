@@ -8,6 +8,7 @@ from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from plyer import accelerometer
 from kivy.clock import Clock
+from kivy.logger import Logger
 import numpy as np
 
 
@@ -30,11 +31,9 @@ BoxLayout:
         multiline: True
 '''
 
-class CalibrationApp(App):
-    STANDARD_GRAVITY = 9.81
 
+class CalibrationApp(App):
     """
-    Initialize app state.
     Calibration process:
         Users sees current step instructions and "register" button.
         When user clicks on the "register" button the app collects N readings samples from the accelerometer.
@@ -43,6 +42,7 @@ class CalibrationApp(App):
         When all steps are completed calculate calibration parameters.
         Display calibration data for the user to copy.
     """
+    STANDARD_GRAVITY = 9.81
 
     def __init__(self):
         super().__init__()
@@ -134,7 +134,7 @@ class CalibrationApp(App):
             if reading is not None and all(reading):
                 self.sensor_readings.append(reading)
         except Exception as e:
-            print(f"michalski: Error collecting readings: {e}")
+            Logger.exception("Error encountered while collecting sensor readings.")
 
 
 if __name__ == '__main__':

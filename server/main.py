@@ -26,7 +26,7 @@ from common.command import Command
 
 
 logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,6 @@ class MouseController:
         self.mouse = Controller()
 
     def apply_command(self, command: Command):
-        print(command.asjson())
         self.mouse.move(command.dx, command.dy)
 
 
