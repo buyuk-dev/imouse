@@ -32,10 +32,10 @@ Need to implement better filtering. Currently integrating accelerometer reading 
 
 # References
 
-[Implementing Positioning Algorithms Using Accelerometers](https://www.nxp.com/docs/en/application-note/AN3397.pdf) by Kurt Seifert and Oscar Camacho
-[StackOverflow thread about accelerometer calibration](https://stackoverflow.com/questions/43364006/android-accelerometer-calibration)
-[Clinometer App SourceCode](https://github.com/BasicAirData/Clinometer/blob/master/app/src/main/java/eu/basicairdata/clinometer/CalibrationActivity.java)
-[Build Kivy Apps On Android Official Quickstart Guide](https://buildozer.readthedocs.io/en/latest/quickstart.html)
-[Plyer Documentation](https://plyer.readthedocs.io/en/latest/api.html)
-[How To Build And Package Kivy Android Application Using Github Actions Workflow](https://middlewaretechnologies.in/2023/07/how-to-build-and-package-kivy-android-application-using-github-actions-workflow.html)
-[Buildozer.spec reference](https://buildozer.readthedocs.io/en/latest/specifications.html)
+1. [Implementing Positioning Algorithms Using Accelerometers](https://www.nxp.com/docs/en/application-note/AN3397.pdf) by Kurt Seifert and Oscar Camacho
+2. [StackOverflow thread about accelerometer calibration](https://stackoverflow.com/questions/43364006/android-accelerometer-calibration)
+3. [Clinometer App SourceCode](https://github.com/BasicAirData/Clinometer/blob/master/app/src/main/java/eu/basicairdata/clinometer/CalibrationActivity.java)
+4. [Build Kivy Apps On Android Official Quickstart Guide](https://buildozer.readthedocs.io/en/latest/quickstart.html)
+5. [Plyer Documentation](https://plyer.readthedocs.io/en/latest/api.html)
+6. [How To Build And Package Kivy Android Application Using Github Actions Workflow](https://middlewaretechnologies.in/2023/07/how-to-build-and-package-kivy-android-application-using-github-actions-workflow.html)
+7. [Buildozer.spec reference](https://buildozer.readthedocs.io/en/latest/specifications.html)
