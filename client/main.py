@@ -23,7 +23,7 @@ from kivy.utils import platform
 from numpy.typing import NDArray
 
 from common.command import Command
-from common.math import RollingAverage, trapezoidal_interpolation
+from common.math import RollingAverage, trapezoidal_interpolation, VelocityEstimator
 from sensors import Accelerometer, SensorReading, DummySensor
 from collections import deque
 from enum import Enum
@@ -125,7 +125,12 @@ class MouseProcessorThread(threading.Thread):
 
             self.sensor_reader_thread.start()
             self.running_average_window = int(self.config.get("general", "running_average_window"))
-            self.acc_filter = RollingAverage(self.running_average_window)
+            #self.acc_filter = RollingAverage(self.running_average_window)
+            self.acc_filter = VelocityEstimator(
+                dt=self.sensor_reader_thread.interval,
+                inactivity_time_threshold=self.inactive_time,
+                inactivity_threshold=self.threshold[0]
+            )
             self.reset_mouse_state()
 
             Logger.info("Mouse_speed: %s", str(self.mouse_speed))
@@ -169,33 +174,27 @@ class MouseProcessorThread(threading.Thread):
         Logger.info("reading.data {}".format(reading.data))
 
         filtered = self.acc_filter.apply(reading.data)
+        # dt_time = 1.0
+        # self.movement_time += dt_time
 
-        threshold = self.threshold
-        if self.state == MouseState.MOVING:
-            threshold = self.moving_threshold_gain * threshold
+        # threshold = self.threshold
+        # if self.state == MouseState.MOVING:
+        #     threshold = self.moving_threshold_gain * threshold
+        # filtered[np.abs(filtered) < threshold] = 0.0
 
-        filtered[np.abs(filtered) < threshold] = 0.0
+        # dt_time = 1.0
+        # self.movement_time += dt_time
+        # if (filtered[:2] == 0).all() and self.movement_time > self.inactive_time:
+        #     self.reset_mouse_state()
+        # else:
+        #     self.state = MouseState.MOVING
 
-        dt_time = 1.0
-        self.movement_time += dt_time
-
-        self.speed += trapezoidal_interpolation(filtered, self.prev_acc, dt_time)
-        self.prev_acc = filtered
-
-        if (filtered[:2] == 0).all() and self.movement_time > self.inactive_time:
-            self.reset_mouse_state()
-        else:
-            self.state = MouseState.MOVING
-
-        delta_pos = trapezoidal_interpolation(self.speed, self.prev_speed, dt_time)
-        self.prev_speed = self.speed
-
-        mouse_move = delta_pos * self.mouse_speed
+        mouse_move = filtered * self.mouse_speed
 
         info_text_lines = [
             ("Raw Accelerometer", reading.data),
-            ("Speed", self.speed),
-            ("Delta Position", delta_pos),
+            ("Speed", filtered),
+            #("Delta Position", delta_pos),
             ("Mouse Move", mouse_move),
         ]
 
