@@ -11,6 +11,7 @@ plyer = "*"
 numpy = "*"
 matplotlib = "*"
 pydantic = "*"
+websockets = "*"
 
 [dev-packages]
 black = "*"

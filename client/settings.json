@@ -26,10 +26,24 @@
     },
     {
         "type": "numeric",
-        "title": "Acc Threshold",
+        "title": "Acc Threshold X",
         "desc": "Accelerometer reading threshold, readings below this value are zeroed.",
         "section": "general",
-        "key": "acc_threshold"
+        "key": "acc_threshold_x"
+    },
+    {
+        "type": "numeric",
+        "title": "Acc Threshold Y",
+        "desc": "Accelerometer reading threshold, readings below this value are zeroed.",
+        "section": "general",
+        "key": "acc_threshold_y"
+    },
+    {
+        "type": "numeric",
+        "title": "Moving Threshold Gain",
+        "desc": "Dynamically adjust threshold when mouse movement is detected.",
+        "section": "general",
+        "key": "moving_threshold_gain"
     },
     {
         "type": "numeric",
@@ -37,6 +51,20 @@
         "desc": "When accelerometer doesn't detect any acceleration within this time period we reset mouse state.",
         "section": "general",
         "key": "inactive_time"
+    },
+    {
+        "type": "numeric",
+        "title": "Running Average Window",
+        "desc": "Number of samples for averaging in RunningAverage filter.",
+        "section": "general",
+        "key": "running_average_window"
+    },
+    {
+        "type": "numeric",
+        "title": "Sampling Interval For Accelerometer Data",
+        "desc": "Spacing between accelerometer samples.",
+        "section": "general",
+        "key": "sampling_interval"
     },
     {
         "type": "string",

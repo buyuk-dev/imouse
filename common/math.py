@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 from typing import Any
+from collections import deque
 
 
 class Constants:
@@ -54,5 +55,18 @@ class LowPassFilter:
         self.previous_filtered = np.zeros(3)
 
 
+class RollingAverage:
+    def __init__(self, window=5):
+        self.window = window
+        self.reset()
+
+    def reset(self):
+        self.samples = deque([np.zeros(3) for _ in range(self.window)], maxlen=self.window)
+
+    def apply(self, current_value) -> NDArray:
+        self.samples.append(np.array(current_value))
+        return np.mean(np.array(self.samples), axis=0)
+
+
 def trapezoidal_interpolation(sample, previous_sample, dt):
-    return 0.5 * (sample - previous_sample) * dt
+    return 0.5 * (sample + previous_sample) * dt

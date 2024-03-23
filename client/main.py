@@ -23,8 +23,10 @@ from kivy.utils import platform
 from numpy.typing import NDArray
 
 from common.command import Command
-from common.math import LowPassFilter, trapezoidal_interpolation
+from common.math import RollingAverage, trapezoidal_interpolation
 from sensors import Accelerometer, SensorReading, DummySensor
+from collections import deque
+from enum import Enum
 
 
 if platform == "win":
@@ -35,6 +37,38 @@ else:
 
 def get_vec_info_str(header: str, vec: NDArray) -> str:
     return f"{header}: " + " | ".join([f"{x:.3f}" for x in vec])
+
+
+class SensorReaderThread(threading.Thread):
+    
+    def __init__(self, interval=1.0/60.0):
+        super().__init__()
+        self.queue_size = 1000
+        self.interval = interval
+        self.queue = deque(maxlen=self.queue_size)
+        self.stop_signal = threading.Event()
+
+    def stop(self):
+        """Signals the thread to stop collecting sensor data."""
+        self.stop_signal.set()
+
+    def run(self):
+        Logger.info("starting sensor recording thread")
+        while not self.stop_signal.is_set():
+            start_time = time.perf_counter()
+
+            reading = accelerometer.read()
+            self.queue.append(reading)
+
+            elapsed_time = time.perf_counter() - start_time
+            sleep_time = max(0, self.interval - elapsed_time)
+
+            time.sleep(sleep_time)
+
+
+class MouseState(Enum):
+    MOVING = 1
+    REST = 2
 
 
 class MouseProcessorThread(threading.Thread):
@@ -52,8 +86,15 @@ class MouseProcessorThread(threading.Thread):
         Logger.info("Creating processor thread.")
         self.thread_running = threading.Event()
         self.thread_running.clear()
+
         self.config = config
         self.set_info_text = set_info_text_func
+
+        sampling_interval = float(self.config.get("general", "sampling_interval"))
+        self.sensor_reader_thread = SensorReaderThread(sampling_interval)
+
+        self.mouse_click = [False, False]
+
 
     def stop_thread(self):
         """
@@ -61,6 +102,8 @@ class MouseProcessorThread(threading.Thread):
         """
         Logger.info("Stopping processor thread.")
         self.thread_running.clear()
+        self.sensor_reader_thread.stop()
+        self.sensor_reader_thread.join()
 
     def run(self):
         """
@@ -71,19 +114,19 @@ class MouseProcessorThread(threading.Thread):
             address, port = self.config.get("general", "server_address").split(":")
             connection.connect((address, int(port)))
 
-            self.threshold = float(self.config.get("general", "acc_threshold"))
+            self.threshold = np.array([
+                float(self.config.get("general", "acc_threshold_x")),
+                float(self.config.get("general", "acc_threshold_y")),
+                0.0
+            ])
+            self.moving_threshold_gain = float(self.config.get("general", "moving_threshold_gain"))
             self.mouse_speed = float(self.config.get("general", "mouse_speed"))
             self.inactive_time = float(self.config.get("general", "inactive_time"))
-            self.movement_time = 0.0
 
-            self.acc_filter = LowPassFilter(
-                float(self.config.get("general", "acc_lp_alpha"))
-            )
-
-            self.speed = np.zeros(3)
-            self.prev_speed = np.zeros(3)
-            self.prev_acc = np.zeros(3)
-            self.prev_time = time.time()
+            self.sensor_reader_thread.start()
+            self.running_average_window = int(self.config.get("general", "running_average_window"))
+            self.acc_filter = RollingAverage(self.running_average_window)
+            self.reset_mouse_state()
 
             Logger.info("Mouse_speed: %s", str(self.mouse_speed))
 
@@ -97,31 +140,52 @@ class MouseProcessorThread(threading.Thread):
             
             accelerometer.disable()
 
+    def reset_mouse_state(self):
+        Logger.info(
+            f"Reseting mouse speed, device at rest for more than {self.inactive_time}s."
+        )
+        self.state = MouseState.REST
+        self.prev_time = time.perf_counter()
+        self.speed = np.zeros(3)
+        self.prev_speed = np.zeros(3)
+        self.prev_acc = np.zeros(3)
+        self.acc_filter.reset()
+        self.movement_time = 0.0
+
     def step(self, connection):
         """
         Compute control signal and send mouse command to the server.
         """
-        reading = accelerometer.read(True)
+        Logger.info(f"Sensor readings queue size: {len(self.sensor_reader_thread.queue)}")
+
+        while len(self.sensor_reader_thread.queue) == 0:
+            time.sleep(self.sensor_reader_thread.interval)
+
+        reading = self.sensor_reader_thread.queue.popleft()
+
+        # Add some offset manually as calibration apparently is not accurate.
+        reading.data -= np.array([0.12, 0.02, 0.0])
+
         Logger.info("reading.data {}".format(reading.data))
 
         filtered = self.acc_filter.apply(reading.data)
 
-        dt_time = reading.timestamp - self.prev_time
+        threshold = self.threshold
+        if self.state == MouseState.MOVING:
+            threshold = self.moving_threshold_gain * threshold
+
+        filtered[np.abs(filtered) < threshold] = 0.0
+
+        dt_time = 1.0
         self.movement_time += dt_time
-        self.prev_time = reading.timestamp
 
         self.speed += trapezoidal_interpolation(filtered, self.prev_acc, dt_time)
         self.prev_acc = filtered
 
-        if (filtered[:2] < self.threshold).all() and self.movement_time > self.inactive_time:
-            Logger.info(
-                f"Reseting mouse speed, device at rest for more than {self.inactive_time}s."
-            )
-            self.speed = np.zeros(3)
-            self.prev_speed = np.zeros(3)
-            self.prev_acc = np.zeros(3)
-            self.acc_filter.reset()
-            self.movement_time = 0.0
+        if (filtered[:2] == 0).all() and self.movement_time > self.inactive_time:
+            self.reset_mouse_state()
+        else:
+            self.state = MouseState.MOVING
 
         delta_pos = trapezoidal_interpolation(self.speed, self.prev_speed, dt_time)
         self.prev_speed = self.speed
@@ -143,7 +207,8 @@ class MouseProcessorThread(threading.Thread):
         if self.set_info_text:
             Clock.schedule_once(lambda dt: self.set_info_text(info_text_str), 0)
 
-        cmd = Command(move=reading.data.tolist())
+        cmd = Command(move=mouse_move.tolist(), click=self.mouse_click)
+        self.mouse_click = [False, False]
         cmd.send(connection)
         cmd.wait_for_ack(connection)
 
@@ -161,6 +226,14 @@ class MouseClientApp(App):
         accelerometer.enable()
         return self.main_layout
 
+    def on_lmb_press(self, instance):
+        if self.processor and self.processor.mouse_click:
+            self.processor.mouse_click[0] = True
+
+    def on_rmb_press(self, instance):
+        if self.processor and self.processor.mouse_click:
+            self.processor.mouse_click[1] = True
+
     def build_mouse_buttons_layout(self):
         self.top_container = AnchorLayout(
             anchor_x="center", anchor_y="top", size_hint=(1, 0.25)
@@ -170,7 +243,11 @@ class MouseClientApp(App):
         )  # Occupies less space for more realistic spacing
 
         self.left_button = Button(text="Left Click", size_hint=(0.45, 1))
+        self.left_button.bind(on_press = self.on_lmb_press)
+
         self.right_button = Button(text="Right Click", size_hint=(0.45, 1))
+        self.right_button.bind(on_press = self.on_rmb_press)
+
         self.scroll_area = Button(
             text="Scroll", size_hint=(0.1, 1.0)
         )  # Narrower and centered
@@ -223,12 +300,15 @@ class MouseClientApp(App):
         config.setdefaults(
             "general",
             {
-                "mouse_speed": 1000.0,
+                "mouse_speed": 5.0,
                 "gyro_lp_alpha": np.pi / 90.0,
                 "acc_lp_alpha": 0.1,
-                "acc_threshold": 0.2,
-                "inactive_time": 0.25,
-                #'server_address': "localhost:5000"
+                "acc_threshold_x": 0.4,
+                "acc_threshold_y": 0.2,
+                "moving_threshold_gain": 1.5,
+                "inactive_time": 0.01,
+                "sampling_interval": 1.0 / 60.0,
+                "running_average_window": 5,
                 "server_address": "192.168.8.24:5000",
             },
         )

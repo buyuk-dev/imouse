@@ -5,27 +5,22 @@ Mouse Server (Must be running on the device which will be controlled using the a
 import sys
 from pathlib import Path
 
+import logger_config
+logger = logger_config.get_logger(__name__)
+
 # Include path to common module
 project_root_path = str(Path(__file__).absolute().parent.parent)
 sys.path.append(project_root_path)
 
-import logging
-import socket
 from multiprocessing import Queue, Process
 import signal
+import socket
 
 from pynput.mouse import Button, Controller
 
 from common.command import Command
 from config import MouseServerConfig
-
 import plotter
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
 
 
 class MouseController:
@@ -34,7 +29,15 @@ class MouseController:
         self.mouse = Controller()
 
     def apply_command(self, command: Command):
-        self.mouse.move(command.move[0], command.move[1])
+        if command.click:
+            if command.click[0]:
+                logger.debug("lmb click")
+                self.mouse.click(Button.left)
+            elif command.click[1]:
+                logger.debug("rmb click")
+                self.mouse.click(Button.right)
+
+        self.mouse.move(int(command.move[0]), -int(command.move[1]))
 
 
 class MouseServerApp:
@@ -49,7 +52,8 @@ class MouseServerApp:
         addr, port = self.config.address.split(":")
         return addr, int(port)
 
-    def wait_for_connection(self, server_socket):
+    def wait_for_connection(self, server_socket:socket.socket):
+        server_socket.settimeout(5.0)
         server_socket.bind(self.get_address())
         server_socket.listen()
 
@@ -62,7 +66,10 @@ class MouseServerApp:
     def run(self):
         logger.info("Server is running.")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-            connection = self.wait_for_connection(server_socket)
+            try:
+                connection = self.wait_for_connection(server_socket)
+            except socket.timeout:
+                return
 
             self.is_running = True
             while self.is_running:
@@ -73,11 +80,11 @@ class MouseServerApp:
                         "Server encountered an error while executing step function."
                     )
                     self.is_running = False
+    
 
     def step(self, connection):
         cmd = Command.recv(connection)
-        logger.debug("Command received: %s", str(cmd))
-
+        #logger.debug("Command received: %s", str(cmd))
         self.plotter_data_queue.put(cmd.move)
         self.controller.apply_command(cmd)
 
@@ -88,13 +95,14 @@ if __name__ == "__main__":
 
     # Start plotter process
     plotter_data_queue = Queue()
-    plotter_process:Process = Process(target=plotter.main, args=(config.plot, plotter_data_queue), daemon=True)
+    plotter_process:Process = Process(target=plotter.main, args=(config.plot, plotter_data_queue))
     plotter_process.start()
 
     def signal_handler(sig, frame):
         logger.info("Signal received, stopping...")
-        plotter_process.terminate()
-        plotter_process.join()
+        if plotter_process.is_alive():
+            plotter_process.terminate()
+            plotter_process.join()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)

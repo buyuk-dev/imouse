@@ -59,7 +59,7 @@ class Sensor:
 
     def read(self, correct:bool=True) -> SensorReading:
         reading = self.read_raw()
-        timestamp = time.time()
+        timestamp = time.perf_counter()
 
         if reading and all(reading):
             reading = np.array(reading)

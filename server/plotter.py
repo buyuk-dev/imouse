@@ -1,3 +1,6 @@
+import logger_config
+logger = logger_config.get_logger(__name__)
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation
@@ -5,13 +8,6 @@ from collections import deque
 
 from config import PlotConfig
 from multiprocessing import Queue
-
-import logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
 
 
 class Plotter:

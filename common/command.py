@@ -16,7 +16,7 @@ class Command:
     """
     move: 'List[float]'
     #dscroll:'Optional[int]'
-    #click:'Optional[tuple[bool, bool]]'
+    click: 'List[bool]'
 
     def asjson(self) -> str:
         """
@@ -38,7 +38,6 @@ class Command:
     @classmethod
     def recv(cls, connection:socket):
         data = connection.recv(128)
-        #print(f"Recv data: {data}")
         data = data.decode('utf-8')
         connection.sendall("ACK".encode("utf-8"))
         return cls.from_json(data)
