@@ -16,19 +16,19 @@ Currently need to manually copy the calibration data from the app into client/ca
 ### Mouse Server App
 
 Features:
-    - receives commands from the mouse client app and moves the mouse based on those commands.
+    - Handles movement and click commands from the client app.
     - plots the received movement commands in real time using basic matplotlib animation (not efficient but suffices for debugging purposes)
-    - loads settings from json file
+    - loads settings from json file.
 
 Bugs:
-    - visualization code has a bug with matplotlib being started in a background thread rather than main
-    - when client disconnects logs show a json decode error, need to handle disconnect more cleanly
+    - Disconnecting and terminating server is not handled in a clean way.
 
 
 ### Mouse Client APK
 
 Need to implement better filtering. Currently integrating accelerometer reading into speed and position leads to very noisy results and the mouse is not yet usable.
-
+There is some space to play with parameter tuning, but I don't think its possible to reach signal quality sufficient for real-life application in current implementation.
+May need to explore Kalman filtering, Machine Learning or other techniques to improve the processing.
 
 # References
 
