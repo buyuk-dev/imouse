@@ -1,21 +1,20 @@
 from dataclasses import dataclass, asdict
 import json
 from socket import socket
-from typing import Optional
+from typing import Optional, Tuple, List
 
 
 @dataclass
 class Command:
     """
     Represents mouse command, which can include:
-    - dx, dy: mouse movement
+    - move: 3D mouse move vector
     - dscroll: mouse wheel scroll change
     - click: buttons clicks
 
     Provides convenience method to serialize command as string.
     """
-    dx:int
-    dy:int
+    move: 'List[float]'
     #dscroll:'Optional[int]'
     #click:'Optional[tuple[bool, bool]]'
 
@@ -38,7 +37,9 @@ class Command:
 
     @classmethod
     def recv(cls, connection:socket):
-        data = connection.recv(64).decode('utf-8')
+        data = connection.recv(128)
+        #print(f"Recv data: {data}")
+        data = data.decode('utf-8')
         connection.sendall("ACK".encode("utf-8"))
         return cls.from_json(data)
 

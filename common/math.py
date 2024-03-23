@@ -52,3 +52,7 @@ class LowPassFilter:
     
     def reset(self):
         self.previous_filtered = np.zeros(3)
+
+
+def trapezoidal_interpolation(sample, previous_sample, dt):
+    return 0.5 * (sample - previous_sample) * dt

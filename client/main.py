@@ -19,14 +19,18 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.settings import SettingsWithSidebar
+from kivy.utils import platform
 from numpy.typing import NDArray
 
 from common.command import Command
-from common.math import LowPassFilter
+from common.math import LowPassFilter, trapezoidal_interpolation
 from sensors import Accelerometer, SensorReading, DummySensor
 
 
-accelerometer = Accelerometer()
+if platform == "win":
+    accelerometer = DummySensor()
+else:
+    accelerometer = Accelerometer()
 
 
 def get_vec_info_str(header: str, vec: NDArray) -> str:
@@ -91,7 +95,7 @@ class MouseProcessorThread(threading.Thread):
                     Logger.exception("Error in MouseProcessorThread step function.")
                     self.stop_thread()
             
-            self.accelerometer.disable()
+            accelerometer.disable()
 
     def step(self, connection):
         """
@@ -106,7 +110,7 @@ class MouseProcessorThread(threading.Thread):
         self.movement_time += dt_time
         self.prev_time = reading.timestamp
 
-        self.speed += 0.5 * (filtered + self.prev_acc) * dt_time
+        self.speed += trapezoidal_interpolation(filtered, self.prev_acc, dt_time)
         self.prev_acc = filtered
 
         if (filtered[:2] < self.threshold).all() and self.movement_time > self.inactive_time:
@@ -119,9 +123,10 @@ class MouseProcessorThread(threading.Thread):
             self.acc_filter.reset()
             self.movement_time = 0.0
 
-        delta_pos = 0.5 * (self.prev_speed + self.speed) * dt_time
-        mouse_move = delta_pos * self.mouse_speed
+        delta_pos = trapezoidal_interpolation(self.speed, self.prev_speed, dt_time)
         self.prev_speed = self.speed
+
+        mouse_move = delta_pos * self.mouse_speed
 
         info_text_lines = [
             ("Raw Accelerometer", reading.data),
@@ -138,7 +143,7 @@ class MouseProcessorThread(threading.Thread):
         if self.set_info_text:
             Clock.schedule_once(lambda dt: self.set_info_text(info_text_str), 0)
 
-        cmd = Command(dx=mouse_move[0], dy=mouse_move[1])
+        cmd = Command(move=reading.data.tolist())
         cmd.send(connection)
         cmd.wait_for_ack(connection)
 
