@@ -206,7 +206,7 @@ class MouseProcessorThread(threading.Thread):
         if self.set_info_text:
             Clock.schedule_once(lambda dt: self.set_info_text(info_text_str), 0)
 
-        cmd = Command(move=mouse_move.tolist(), click=self.mouse_click)
+        cmd = Command(move=filtered.tolist(), click=self.mouse_click)
         self.mouse_click = [False, False]
         cmd.send(connection)
         cmd.wait_for_ack(connection)

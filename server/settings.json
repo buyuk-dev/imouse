@@ -4,7 +4,7 @@
         "figsize": [2000, 800],
         "dpi": 100,
         "npoints": 1000,
-        "scale": [-50.0, 50.0],
+        "scale": [-2.0, 2.0],
         "refresh_interval": 100
     }
 }

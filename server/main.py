@@ -27,6 +27,7 @@ class MouseController:
 
     def __init__(self):
         self.mouse = Controller()
+        self.mouse_speed = 100.0
 
     def apply_command(self, command: Command):
         if command.click:
@@ -37,7 +38,10 @@ class MouseController:
                 logger.debug("rmb click")
                 self.mouse.click(Button.right)
 
-        self.mouse.move(int(command.move[0]), -int(command.move[1]))
+        dx = int(command.move[0] * self.mouse_speed)
+        dy = int(command.move[1] * self.mouse_speed)
+
+        self.mouse.move(dx, -dy)
 
 
 class MouseServerApp:

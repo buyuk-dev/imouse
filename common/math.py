@@ -74,7 +74,7 @@ def trapezoidal_interpolation(sample, previous_sample, dt):
 
 class VelocityEstimator:
     def __init__(
-            self, dt: float = 0.05, process_noise_var: float = 1e-2, measurement_noise_var: float = 1e-2,
+            self, dt: float = 0.05, process_noise_var: float = 0.02, measurement_noise_var: float = 0.01,
             inactivity_threshold=None, inactivity_time_threshold=None):
         """
         Initializes the velocity estimator for 3D vectors with acceleration considered in the state.
@@ -90,6 +90,8 @@ class VelocityEstimator:
         self.inactivity_threshold = inactivity_threshold
         self.inactivity_time_threshold = inactivity_time_threshold
         self.inactivity_timer = 0.0
+        self.z_movement_timer = 0.0
+        self.z_movement_time_threshold = dt * 3.0
 
         self.dt = dt
         # State vector [vx, ax, vy, ay, vz, az] (velocity and acceleration in 3D)
@@ -117,9 +119,17 @@ class VelocityEstimator:
         # Control input (unused)
         self.u = np.zeros(3)
 
+    def check_and_reset_on_z_movement(self, current_acceleration):
+        if abs(current_acceleration[2]) > self.inactivity_threshold:
+            self.z_movement_timer += self.dt
+            if self.z_movement_timer > self.z_movement_time_threshold:
+                self.reset()
+                self.z_movement_timer = 0.0
+        else:
+            self.z_movement_timer = 0.0
 
     def check_and_reset_inactivity(self, current_acceleration):
-        if np.linalg.norm(current_acceleration[:2]) < self.inactivity_threshold:
+        if (np.linalg.norm(current_acceleration[:2]) < self.inactivity_threshold):
             self.inactivity_timer += self.dt
             if self.inactivity_timer > self.inactivity_time_threshold:
                 self.reset()
@@ -145,6 +155,7 @@ class VelocityEstimator:
         - The estimated velocity [vx, vy, vz] in 3D.
         """
         self.check_and_reset_inactivity(current_acceleration)
+        self.check_and_reset_on_z_movement(current_acceleration)
 
         # Predict
         self.x = np.dot(self.F, self.x) + np.dot(self.B, self.u)

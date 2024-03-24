@@ -1,5 +1,7 @@
 # Development state:
 
+<iframe height="720" src="https://www.youtube.com/embed/b-4CgelNyL0" title="iMouse - turn your phone into a wireless mouse" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 ## Current Features
 
 Currently I'm testing all the apps on my Redmi 12 Pro with MIUI 14 with server running on my Windows 11 laptop.
@@ -26,9 +28,10 @@ Bugs:
 
 ### Mouse Client APK
 
-Need to implement better filtering. Currently integrating accelerometer reading into speed and position leads to very noisy results and the mouse is not yet usable.
-There is some space to play with parameter tuning, but I don't think its possible to reach signal quality sufficient for real-life application in current implementation.
-May need to explore Kalman filtering, Machine Learning or other techniques to improve the processing.
+With the help of Kalman Filter the movements became much better. There is still a lot of room to fine-tune the parameter, but I suppose
+will have to clean up the code first to make it easier.
+
+There is an issue that the signal appears to deteriorate the longer the app is running. Will need to review the filter and app state and perhaps change how its reset.
 
 # References
 
