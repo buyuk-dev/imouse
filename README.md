@@ -1,6 +1,6 @@
 # Development state:
 
-<iframe height="720" src="https://www.youtube.com/embed/b-4CgelNyL0" title="iMouse - turn your phone into a wireless mouse" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+[![Watch the Demo Recording](https://img.youtube.com/vi/b-4CgelNyL0/hqdefault.jpg)](https://www.youtube.com/embed/b-4CgelNyL0)
 
 ## Current Features
 
