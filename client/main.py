@@ -174,27 +174,11 @@ class MouseProcessorThread(threading.Thread):
         Logger.info("reading.data {}".format(reading.data))
 
         filtered = self.acc_filter.apply(reading.data)
-        # dt_time = 1.0
-        # self.movement_time += dt_time
-
-        # threshold = self.threshold
-        # if self.state == MouseState.MOVING:
-        #     threshold = self.moving_threshold_gain * threshold
-        # filtered[np.abs(filtered) < threshold] = 0.0
-
-        # dt_time = 1.0
-        # self.movement_time += dt_time
-        # if (filtered[:2] == 0).all() and self.movement_time > self.inactive_time:
-        #     self.reset_mouse_state()
-        # else:
-        #     self.state = MouseState.MOVING
-
         mouse_move = filtered * self.mouse_speed
 
         info_text_lines = [
             ("Raw Accelerometer", reading.data),
             ("Speed", filtered),
-            #("Delta Position", delta_pos),
             ("Mouse Move", mouse_move),
         ]
 
@@ -216,7 +200,6 @@ class MouseClientApp(App):
     """
     Mouse Client App With Kivy Framework.
     """
-
     def build(self):
         self.main_layout = BoxLayout(orientation="vertical")
         self.build_mouse_buttons_layout()
