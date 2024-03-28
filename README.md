@@ -38,7 +38,7 @@ There is an issue that the signal appears to deteriorate the longer the app is r
 
 ### On Windows
 
-**Prerequisits**
+**Prerequisites**
 
 1. WSL2 configured and running.
 2. Python3 and Pip installed within WSL2 system.
