@@ -33,6 +33,56 @@ will have to clean up the code first to make it easier.
 
 There is an issue that the signal appears to deteriorate the longer the app is running. Will need to review the filter and app state and perhaps change how its reset.
 
+
+## Build Instructions
+
+### On Windows
+
+**Prerequisits**
+
+1. WSL2 configured and running.
+2. Python3 and Pip installed within WSL2 system.
+
+**Dependencies**
+
+    sudo apt update
+    sudo apt install -y \
+        python3 \
+        python3-pip \
+        git \
+        zip \
+        unzip \
+        openjdk-17-jdk \
+        python3-pip \
+        autoconf \
+        libtool \
+        pkg-config \
+        zlib1g-dev \
+        libncurses5-dev \
+        libncursesw5-dev \
+        libtinfo5 \
+        cmake \
+        libffi-dev \
+        libssl-dev \
+        dos2unix
+
+    pip3 install --user --upgrade buildozer
+    pip3 install --user --upgrade Cython==0.29.33 virtualenv
+
+**Clone Repository**
+
+    git clone https://github.com/buyuk-dev/imouse.git
+    cd imouse
+
+**Build Project**
+
+    make all
+
+
+**Required if you get an error indicating something like: bash\r file not found**
+
+    dos2unix .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/imouse/gradlew
+
 # References
 
 1. [Implementing Positioning Algorithms Using Accelerometers](https://www.nxp.com/docs/en/application-note/AN3397.pdf) by Kurt Seifert and Oscar Camacho
