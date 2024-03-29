@@ -1,18 +1,13 @@
 import sys
 from pathlib import Path
 
-# Include path to common module
 project_root_path = str(Path(__file__).absolute().parent.parent)
 sys.path.append(project_root_path)
 
-import signal
-import time
 from multiprocessing import Queue
 from multiprocessing.managers import BaseManager
-import threading
 
 import common.logger_config as logger_config
-
 logger = logger_config.get_logger(__name__)
 
 from pyqt_plotter import Plotter
@@ -59,6 +54,8 @@ def main(config: PlotConfig):
     logger.info("Starting plotter...")
     plotter = Plotter(config, queue)
     plotter.run()
+
+    queue_server.stop()
 
 
 if __name__ == "__main__":
