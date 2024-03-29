@@ -78,10 +78,13 @@ There is an issue that the signal appears to deteriorate the longer the app is r
 
     make all
 
-
 **Required if you get an error indicating something like: bash\r file not found**
 
     dos2unix .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/imouse/gradlew
+
+**Build speed**
+First time build with buildozer will take a long time, depending on the spec of the maching its being build on it may take upwards of 30 min.
+This is when buildozer downloads and compiles dependencies like numpy etc. After the first builds the dependencies will be saved in the build/.buildozer/ subdirectory. Using make clean will not remove this directory, in order to ensure the future builds are as fast as possible. To maintain fast build speed keep this directory and/or create a backup in case it will accidentally get deleted.
 
 # References
 
