@@ -12,6 +12,7 @@ from multiprocessing.managers import BaseManager
 import threading
 
 import common.logger_config as logger_config
+
 logger = logger_config.get_logger(__name__)
 
 from pyqt_plotter import Plotter
@@ -19,39 +20,40 @@ from config import PlotConfig
 
 
 class QueueManager(BaseManager):
-    pass
+    queue = Queue()
 
 
-class QueueServerThread(threading.Thread):
+def get_shared_queue():
+    return QueueManager.queue
+
+
+QueueManager.register("get_queue", callable=get_shared_queue)
+
+
+class QueueServer:
 
     def __init__(self, address, authkey):
-        super().__init__()
         self.queue = Queue()
-        QueueManager.register("get_queue", callable=lambda: self.queue)
-        self.address = address
-        self.authkey = authkey
+        self.queue_manager = QueueManager(address=address, authkey=authkey.encode())
         logger.info("Initializing queue server...")
 
-    def run(self):
+    def start(self):
         logger.info("Running queue server...")
-        queue_manager = QueueManager(address=self.address, authkey=self.authkey.encode())
-        server = queue_manager.get_server()
-        server.serve_forever()
+        self.queue_manager.start()
+
+    def stop(self):
+        logger.info("Stopping queue server...")
+        self.queue_manager.shutdown()
+        logger.info("Queue server stopped.")
 
 
 def main(config: PlotConfig):
     logger.info("Address: %s : %d", *config.get_address())
-    queue_server = QueueServerThread(config.get_address(), config.authkey)
+    queue_server = QueueServer(config.get_address(), config.authkey)
     queue_server.start()
-    logger.info("Starting queue server...")
 
-    time.sleep(1.0)
     queue_manager = QueueManager(config.get_address(), config.authkey.encode())
-    logger.info("Connecting to queue server...")
-
     queue_manager.connect()
-    logger.info("Queue server connected.")
-
     queue = queue_manager.get_queue()
 
     logger.info("Starting plotter...")
@@ -59,10 +61,9 @@ def main(config: PlotConfig):
     plotter.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
-        # config = PlotConfig.from_json()
-        config = PlotConfig(figsize=(800, 600), dpi=100, npoints=1000, scale=[-1.0, 1.0], refresh_interval=100, address="localhost:50001", authkey="abc")
+        config = PlotConfig.from_json()
         main(config)
     except:
         logger.exception("Plotter exception occured.")

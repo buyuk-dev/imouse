@@ -1,4 +1,13 @@
+"""
+Deprecated: use pyqt_plotter instead.
+
+Data visualisation module for iMosue implemented using Matplotlib framework.
+Very inefficient, UI keeps hanging. Could improve it a bit but decided to rewrite
+visualisation using pyqtgraph package.
+"""
+
 import common.logger_config as logger_config
+
 logger = logger_config.get_logger(__name__)
 
 import matplotlib.pyplot as plt
@@ -14,6 +23,7 @@ class Plotter:
     """
     Intented to be run as a separate process due to matplotlib restrictions regarding running in main thread.
     """
+
     def __init__(self, plot_config: PlotConfig, data_queue: Queue):
 
         self.config = plot_config
@@ -51,7 +61,7 @@ class Plotter:
             axs[0].plot(self.dx_data, label="DX")
             axs[1].plot(self.dy_data, label="DY")
             axs[2].plot(self.dz_data, label="DZ")
-            
+
             axs[0].legend(loc="upper left")
             axs[1].legend(loc="upper left")
             axs[2].legend(loc="upper left")

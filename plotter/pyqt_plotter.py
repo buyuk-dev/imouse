@@ -1,5 +1,10 @@
+"""
+Data visualization module for iMouse using PyQt5 and pyqtgraph frameworks.
+"""
+
 import sys
 import common.logger_config as logger_config
+
 logger = logger_config.get_logger(__name__)
 
 import numpy as np
@@ -17,14 +22,15 @@ class PlotterWindow(QMainWindow):
     """
     Intented to be run as a separate process due to matplotlib restrictions regarding running in main thread.
     """
+
     def __init__(self, plot_config: PlotConfig, data_queue: Queue):
         super().__init__()
 
         self.config = plot_config
         self.queue = data_queue
+        self.window_title = self.config.window_title
 
-        self.window_title = "iMouse Data Graph"
-        self.axes = ("x", "y", "z")
+        self.axes = self.config.axes
         self.data = [
             deque(np.zeros(self.config.npoints), maxlen=self.config.npoints)
             for _ in self.axes
@@ -73,6 +79,9 @@ class PlotterWindow(QMainWindow):
 
 
 class Plotter:
+    """
+    Wrapper class to run PlotterWindow in QApplication.
+    """
 
     def __init__(self, plot_config: PlotConfig, data_queue: Queue):
         self.app = QApplication(sys.argv)
@@ -80,5 +89,4 @@ class Plotter:
 
     def run(self):
         self.plotter_window.show()
-        sys.exit(self.app.exec_())
-    
+        self.app.exec_()
