@@ -38,13 +38,16 @@ def main():
     logger.info("Queue server connected.")
     queue = queue_manager.get_queue()
 
-    while True:
+    is_running = True
+    while is_running:
         try:
             logger.info("sending data packet...")
             queue.put(random(3).tolist())
             time.sleep(0.1)
         except ConnectionResetError:
             logger.info("Plotter server disconnected.")
+            is_running = False
+
 
 
 if __name__ == "__main__":

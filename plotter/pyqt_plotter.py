@@ -48,6 +48,7 @@ class PlotterWindow(QMainWindow):
         for index, title in enumerate(self.axes):
             plot = self.graph_widget.addPlot(row=index, col=0)
             plot.setTitle(title)
+            plot.setYRange(min=self.config.scale[0], max=self.config.scale[1])
             curve = plot.plot(pen=pyqtgraph.mkPen(width=2))
             self.plots.append(plot)
             self.curves.append(curve)
