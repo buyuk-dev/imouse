@@ -12,6 +12,7 @@ numpy = "*"
 matplotlib = "*"
 pydantic = "*"
 websockets = "*"
+pyqt5 = "*"
 
 [dev-packages]
 black = "*"

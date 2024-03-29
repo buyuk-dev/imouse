@@ -4,16 +4,7 @@ from pathlib import Path
 import json
 
 
-class PlotConfig(BaseModel):
-    figsize: Tuple[int, int]
-    dpi: int
-    npoints: int
-    scale: Tuple[float, float]
-    refresh_interval: int
-
-
 class MouseServerConfig(BaseModel):
-    plot: PlotConfig
     address: str
 
     @classmethod

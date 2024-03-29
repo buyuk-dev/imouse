@@ -1,4 +1,4 @@
-import logger_config
+import common.logger_config as logger_config
 logger = logger_config.get_logger(__name__)
 
 import matplotlib.pyplot as plt
@@ -8,7 +8,6 @@ from collections import deque
 
 from config import PlotConfig
 from multiprocessing import Queue
-
 
 class Plotter:
     """
@@ -23,6 +22,7 @@ class Plotter:
         self.dz_data = deque(np.zeros(self.config.npoints), maxlen=self.config.npoints)
 
     def add_data(self, vec):
+        logger.info(f"adding data to plot: {vec}")
         self.dx_data.append(vec[0])
         self.dy_data.append(vec[1])
         self.dz_data.append(vec[2])
@@ -63,12 +63,3 @@ class Plotter:
 
         ani = FuncAnimation(fig, animate, interval=self.config.refresh_interval)
         plt.show()
-
-
-def main(config: PlotConfig, data_queue: Queue):
-    plotter = Plotter(config, data_queue)
-    plotter.run()
-
-
-if __name__ == '__main__':
-    raise NotImplementedError("Currentlly plotter cannot be started as a standalone process and must be spawned by mouse server.")
