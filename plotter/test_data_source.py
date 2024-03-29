@@ -3,14 +3,7 @@ This module can be used to test plotter application.
 It connects to the plotter queue server and produces random data.
 """
 
-import sys
-from pathlib import Path
-
-project_root_path = str(Path(__file__).absolute().parent.parent)
-sys.path.append(project_root_path)
-
 import common.logger_config as logger_config
-
 logger = logger_config.get_logger(__name__)
 
 import time

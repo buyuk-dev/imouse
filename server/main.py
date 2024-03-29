@@ -1,13 +1,6 @@
 """
 Mouse Server (Must be running on the device which will be controlled using the app).
 """
-import sys
-from pathlib import Path
-
-# Include path to common module
-project_root_path = str(Path(__file__).absolute().parent.parent)
-sys.path.append(project_root_path)
-
 import common.logger_config as logger_config
 logger = logger_config.get_logger(__name__)
 

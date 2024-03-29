@@ -1,9 +1,3 @@
-import sys
-from pathlib import Path
-
-project_root_path = str(Path(__file__).absolute().parent.parent)
-sys.path.append(project_root_path)
-
 from multiprocessing import Queue
 from multiprocessing.managers import BaseManager
 
