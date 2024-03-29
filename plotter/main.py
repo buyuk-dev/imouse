@@ -14,7 +14,7 @@ import threading
 import common.logger_config as logger_config
 logger = logger_config.get_logger(__name__)
 
-from plotter import Plotter
+from pyqt_plotter import Plotter
 from config import PlotConfig
 
 
