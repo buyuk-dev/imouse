@@ -38,7 +38,7 @@ class Command:
 
     @classmethod
     def recv(cls, connection:socket):
-        data = connection.recv(256)
+        data = connection.recv(1024)
         data = data.decode('utf-8')
         connection.sendall("ACK".encode("utf-8"))
         return cls.from_json(data)
