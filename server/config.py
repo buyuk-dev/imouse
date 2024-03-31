@@ -1,23 +1,17 @@
 from pydantic import BaseModel
-from typing import Optional, Tuple
+from typing import Optional
 from pathlib import Path
 import json
 
 
-class PlotConfig(BaseModel):
-    figsize: Tuple[int, int]
-    dpi: int
-    npoints: int
-    scale: Tuple[float, float]
-    refresh_interval: int
-
-
 class MouseServerConfig(BaseModel):
-    plot: PlotConfig
     address: str
+    mouse_speed: int
+    plotter_address: Optional[str]
+    plotter_authkey: Optional[str]
 
     @classmethod
-    def from_json(cls, path="settings.json") -> "MouseServerConfig":
+    def from_json(cls, path="config/settings.json") -> "MouseServerConfig":
         path = Path(path)
         data = json.loads(path.read_text())
         return MouseServerConfig(**data)
