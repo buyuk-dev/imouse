@@ -1,11 +1,13 @@
 from multiprocessing import Queue
 from multiprocessing.managers import BaseManager
 
+from pyqt_plotter import Plotter
+from config import PlotConfig
+
+from common.network_utils import parse_address
 import common.logger_config as logger_config
 logger = logger_config.get_logger(__name__)
 
-from pyqt_plotter import Plotter
-from config import PlotConfig
 
 
 class QueueManager(BaseManager):
@@ -37,11 +39,12 @@ class QueueServer:
 
 
 def main(config: PlotConfig):
-    logger.info("Address: %s : %d", *config.get_address())
-    queue_server = QueueServer(config.get_address(), config.authkey)
+    address = parse_address(config.address)
+    logger.info("Address: %s : %d", *address)
+    queue_server = QueueServer(address, config.authkey)
     queue_server.start()
 
-    queue_manager = QueueManager(config.get_address(), config.authkey.encode())
+    queue_manager = QueueManager(address, config.authkey.encode())
     queue_manager.connect()
     queue = queue_manager.get_queue()
 

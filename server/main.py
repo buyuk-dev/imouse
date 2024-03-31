@@ -1,18 +1,25 @@
 """
 Mouse Server (Must be running on the device which will be controlled using the app).
 """
-import common.logger_config as logger_config
-logger = logger_config.get_logger(__name__)
-
-from multiprocessing import Queue, Process
+import sys
 import signal
 import socket
+
+from multiprocessing import Queue
+from multiprocessing.managers import BaseManager
 
 from pynput.mouse import Button, Controller
 
 from common.command import Command
 from config import MouseServerConfig
-import plotter
+
+from common.network_utils import parse_address
+import common.logger_config as logger_config
+logger = logger_config.get_logger(__name__)
+
+
+class QueueManager(BaseManager):
+    pass
 
 
 class MouseController:
@@ -44,13 +51,9 @@ class MouseServerApp:
         self.is_running = False
         self.plotter_data_queue = plotter_data_queue
 
-    def get_address(self):
-        addr, port = self.config.address.split(":")
-        return addr, int(port)
-
     def wait_for_connection(self, server_socket:socket.socket):
         server_socket.settimeout(5.0)
-        server_socket.bind(self.get_address())
+        server_socket.bind(parse_address(self.config.address))
         server_socket.listen()
 
         logger.info("Server waiting for connection...")
@@ -89,16 +92,20 @@ if __name__ == "__main__":
     config = MouseServerConfig.from_json()
     logger.info(str(config))
 
-    # Start plotter process
-    plotter_data_queue = Queue()
-    plotter_process:Process = Process(target=plotter.main, args=(config.plot, plotter_data_queue))
-    plotter_process.start()
+    QueueManager.register("get_queue")
+    queue_manager = QueueManager(
+        address=parse_address(config.plotter_address), authkey=config.plotter_authkey.encode()
+    )
 
+    logger.info("Connecting to queue server...")
+    queue_manager.connect()
+
+    logger.info("Queue server connected.")
+    plotter_data_queue = queue_manager.get_queue()
+
+    # Connect signal handler
     def signal_handler(sig, frame):
         logger.info("Signal received, stopping...")
-        if plotter_process.is_alive():
-            plotter_process.terminate()
-            plotter_process.join()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)

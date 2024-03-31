@@ -1,3 +1,5 @@
 {
-    "address": "0.0.0.0:5000"
+    "address": "0.0.0.0:5000",
+    "plotter_address": "localhost:50001",
+    "plotter_authkey": "abc"
 }

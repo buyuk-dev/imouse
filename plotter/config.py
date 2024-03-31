@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Tuple, List
 from pydantic import BaseModel
 import argparse
-
+from common.network_utils import parse_address
 
 DEFAULT_CONFIG_PATH = "config/settings.json"
 
@@ -30,10 +30,6 @@ class PlotConfig(BaseModel):
     authkey: str
     axes: List[str]
     window_title: str
-
-    def get_address(self) -> Tuple[str, int]:
-        addr, port = self.address.split(":")
-        return addr, int(port)
 
     @classmethod
     def from_json(cls, path=DEFAULT_CONFIG_PATH) -> "PlotConfig":

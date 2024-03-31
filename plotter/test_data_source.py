@@ -11,6 +11,8 @@ from multiprocessing.managers import BaseManager
 from config import PlotConfig
 from numpy.random import random
 
+from common.network_utils import parse_address
+
 
 class QueueManager(BaseManager):
     pass
@@ -22,7 +24,7 @@ def main():
     logger.info("Initializing queue manager...")
     QueueManager.register("get_queue")
     queue_manager = QueueManager(
-        address=config.get_address(), authkey=config.authkey.encode()
+        address=parse_address(config.address), authkey=config.authkey.encode()
     )
 
     logger.info("Connecting to queue server...")
