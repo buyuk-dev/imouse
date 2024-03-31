@@ -1,7 +1,7 @@
 from dataclasses import dataclass, asdict
 import json
 from socket import socket
-from typing import Optional, Tuple, List
+from typing import List
 
 
 @dataclass
@@ -17,6 +17,7 @@ class Command:
     move: 'List[float]'
     #dscroll:'Optional[int]'
     click: 'List[bool]'
+    plot_data: 'List[List[float]]'
 
     def asjson(self) -> str:
         """
@@ -37,7 +38,7 @@ class Command:
 
     @classmethod
     def recv(cls, connection:socket):
-        data = connection.recv(128)
+        data = connection.recv(256)
         data = data.decode('utf-8')
         connection.sendall("ACK".encode("utf-8"))
         return cls.from_json(data)

@@ -90,10 +90,8 @@ class MouseServerApp:
         If plotter service was connected send data.
         """
         cmd = Command.recv(connection)
-
         if self.plotter_data_queue:
-            self.plotter_data_queue.put(cmd.move)
-
+            self.plotter_data_queue.put(cmd.plot_data)
         self.controller.apply_command(cmd)
 
     def wait_for_connection(self, server_socket:socket.socket) -> socket.socket:

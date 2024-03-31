@@ -3,7 +3,7 @@
     "dpi": 100,
     "npoints": 1000,
     "scale": [-2.0, 2.0],
-    "axes": ["x", "y", "z"],
+    "axes": ["acc.x", "acc.y", "acc.z", "speed.x", "speed.y", "speed.z"],
     "refresh_interval": 100,
     "address": "localhost:50001",
     "authkey": "abc",

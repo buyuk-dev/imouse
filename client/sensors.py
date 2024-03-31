@@ -8,7 +8,6 @@ import numpy as np
 from kivy.logger import Logger
 from numpy.typing import NDArray
 from plyer import accelerometer, gyroscope
-#from abc import ABC, abstractmethod
 
 
 @dataclass

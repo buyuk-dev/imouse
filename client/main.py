@@ -21,6 +21,7 @@ from kivy.uix.label import Label
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.utils import platform
 from numpy.typing import NDArray
+from typing import Deque
 
 from common.command import Command
 from common.math import RollingAverage, trapezoidal_interpolation, VelocityEstimator
@@ -39,13 +40,18 @@ def get_vec_info_str(header: str, vec: NDArray) -> str:
     return f"{header}: " + " | ".join([f"{x:.3f}" for x in vec])
 
 
+class MouseState(Enum):
+    MOVING = 1
+    REST = 2
+
+
 class SensorReaderThread(threading.Thread):
     
     def __init__(self, interval=1.0/60.0):
         super().__init__()
         self.queue_size = 1000
         self.interval = interval
-        self.queue = deque(maxlen=self.queue_size)
+        self.queue:Deque[SensorReading] = deque(maxlen=self.queue_size)
         self.stop_signal = threading.Event()
 
     def stop(self):
@@ -58,17 +64,16 @@ class SensorReaderThread(threading.Thread):
             start_time = time.perf_counter()
 
             reading = accelerometer.read()
+
+            if len(self.queue) == self.queue_size:
+                Logger.warning("Accelerometer queue full. Dropping oldest samples.")
+
             self.queue.append(reading)
 
             elapsed_time = time.perf_counter() - start_time
             sleep_time = max(0, self.interval - elapsed_time)
 
             time.sleep(sleep_time)
-
-
-class MouseState(Enum):
-    MOVING = 1
-    REST = 2
 
 
 class MouseProcessorThread(threading.Thread):
@@ -167,19 +172,12 @@ class MouseProcessorThread(threading.Thread):
             time.sleep(self.sensor_reader_thread.interval)
 
         reading = self.sensor_reader_thread.queue.popleft()
-
-        # Add some offset manually as calibration apparently is not accurate.
-        reading.data -= np.array([0.12, 0.02, 0.0])
-
         Logger.info("reading.data {}".format(reading.data))
-
-        filtered = self.acc_filter.apply(reading.data)
-        mouse_move = filtered * self.mouse_speed
+        speed = self.acc_filter.apply(reading.data)
 
         info_text_lines = [
             ("Raw Accelerometer", reading.data),
-            ("Speed", filtered),
-            ("Mouse Move", mouse_move),
+            ("Speed", speed),
         ]
 
         info_text_str = os.linesep.join(
@@ -190,8 +188,16 @@ class MouseProcessorThread(threading.Thread):
         if self.set_info_text:
             Clock.schedule_once(lambda dt: self.set_info_text(info_text_str), 0)
 
-        cmd = Command(move=filtered.tolist(), click=self.mouse_click)
+        cmd = Command(
+            move=speed.tolist(),
+            click=self.mouse_click,
+            plot_data=[
+                *reading.data,
+                *speed,
+            ]
+        )
         self.mouse_click = [False, False]
+
         cmd.send(connection)
         cmd.wait_for_ack(connection)
 
