@@ -1,11 +1,12 @@
 from pydantic import BaseModel
-from typing import Optional, Tuple
+from typing import Optional
 from pathlib import Path
 import json
 
 
 class MouseServerConfig(BaseModel):
     address: str
+    mouse_speed: int
     plotter_address: Optional[str]
     plotter_authkey: Optional[str]
 

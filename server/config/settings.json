@@ -1,5 +1,6 @@
 {
     "address": "0.0.0.0:5000",
+    "mouse_speed": 100,
     "plotter_address": "localhost:50001",
     "plotter_authkey": "abc"
 }
