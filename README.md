@@ -96,3 +96,4 @@ This is when buildozer downloads and compiles dependencies like numpy etc. After
 5. [Plyer Documentation](https://plyer.readthedocs.io/en/latest/api.html)
 6. [How To Build And Package Kivy Android Application Using Github Actions Workflow](https://middlewaretechnologies.in/2023/07/how-to-build-and-package-kivy-android-application-using-github-actions-workflow.html)
 7. [Buildozer.spec reference](https://buildozer.readthedocs.io/en/latest/specifications.html)
+8. [Kalman Filter Explained Simply](https://thekalmanfilter.com/kalman-filter-explained-simply/)

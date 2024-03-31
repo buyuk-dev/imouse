@@ -130,8 +130,8 @@ class MouseProcessorThread(threading.Thread):
 
             self.sensor_reader_thread.start()
             self.running_average_window = int(self.config.get("general", "running_average_window"))
-            #self.acc_filter = RollingAverage(self.running_average_window)
-            self.acc_filter = VelocityEstimator(
+            self.running_average_filter = RollingAverage(self.running_average_window)
+            self.kalman_filter = VelocityEstimator(
                 dt=self.sensor_reader_thread.interval,
                 inactivity_time_threshold=self.inactive_time,
                 inactivity_threshold=self.threshold[0]
@@ -159,7 +159,8 @@ class MouseProcessorThread(threading.Thread):
         self.speed = np.zeros(3)
         self.prev_speed = np.zeros(3)
         self.prev_acc = np.zeros(3)
-        self.acc_filter.reset()
+        self.kalman_filter.reset()
+        self.running_average_filter.reset()
         self.movement_time = 0.0
 
     def step(self, connection):
@@ -173,7 +174,9 @@ class MouseProcessorThread(threading.Thread):
 
         reading = self.sensor_reader_thread.queue.popleft()
         Logger.info("reading.data {}".format(reading.data))
-        speed = self.acc_filter.apply(reading.data)
+
+        speed = self.running_average_filter.apply(reading.data)
+        speed = self.kalman_filter.apply(speed)
 
         info_text_lines = [
             ("Raw Accelerometer", reading.data),
@@ -295,7 +298,7 @@ class MouseClientApp(App):
                 "acc_threshold_y": 0.2,
                 "moving_threshold_gain": 1.5,
                 "inactive_time": 0.01,
-                "sampling_interval": 1.0 / 60.0,
+                "sampling_interval": 1.0 / 100.0,
                 "running_average_window": 5,
                 "server_address": "192.168.8.24:5000",
             },
