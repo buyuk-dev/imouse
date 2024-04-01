@@ -3,8 +3,8 @@ This module can be used to test plotter application.
 It connects to the plotter queue server and produces random data.
 """
 
-import common.logger_config as logger_config
-logger = logger_config.get_logger(__name__)
+import common.logging as logging
+logger = logging.get_logger(__name__)
 
 import time
 from multiprocessing.managers import BaseManager

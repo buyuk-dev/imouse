@@ -80,7 +80,6 @@ class VelocityEstimator:
         Initializes the velocity estimator for 3D vectors with acceleration considered in the state.
         
         Args:
-        - dt: Sampling interval in seconds.
         - process_noise_var: Variance of the process noise (applied to acceleration).
         - measurement_noise_var: Variance of the measurement noise.
         """

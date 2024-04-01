@@ -1,0 +1,45 @@
+#:kivy 2.3.0
+#:import MouseView ui.MouseView
+
+<MouseView>:
+    name: 'mouse'
+    BoxLayout:
+        orientation: 'vertical'
+
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'top'
+            size_hint: (1.0, 0.25)
+
+            BoxLayout:
+                size_hint: (1.0, 1.0)
+
+                Button:
+                    text: 'LMB'
+                    size_hint: (0.45, 1.0)
+                    on_press: root.on_lmb_press()
+
+                Button:
+                    text: 'WHL'
+                    size_hint: (0.1, 1.0)
+                    on_press: root.on_whl_press()
+                    on_touch_down: root.on_scroll_start(*args)
+                    on_touch_up: root.on_scroll_stop(*args)
+
+                Button:
+                    text: 'RMB'
+                    size_hint: (0.45, 1.0)
+                    on_press: root.on_lmb_press()
+
+        Label:
+            id: 'info_label'
+            text: 'Debug Info:'
+            size_hint: (1.0, 0.65)
+            halign: 'center'
+            valign: 'middle'
+
+        Button:
+            id: 'open_settings'
+            text: 'Settings'
+            size_hint: (1.0, 0.1)
+            on_press: app.open_settings()

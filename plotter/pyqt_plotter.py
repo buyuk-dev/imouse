@@ -3,9 +3,9 @@ Data visualization module for iMouse using PyQt5 and pyqtgraph frameworks.
 """
 
 import sys
-import common.logger_config as logger_config
+import common.logging as logging
 
-logger = logger_config.get_logger(__name__)
+logger = logging.get_logger(__name__)
 
 import numpy as np
 from collections import deque

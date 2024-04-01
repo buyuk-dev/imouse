@@ -1,14 +1,10 @@
 import os
-import sys
-from pathlib import Path
-
-project_root_path = str(Path(__file__).absolute().parent.parent)
-sys.path.append(project_root_path)
-
 import socket
 import threading
 import time
-from typing import Callable
+from collections import deque
+from enum import Enum
+from typing import Callable, Deque
 
 import numpy as np
 from kivy.app import App
@@ -19,25 +15,15 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.settings import SettingsWithSidebar
-from kivy.utils import platform
 from numpy.typing import NDArray
-from typing import Deque
 
+from common.logging import get_vec_info_str
 from common.command import Command
-from common.math import RollingAverage, trapezoidal_interpolation, VelocityEstimator
-from sensors import Accelerometer, SensorReading, DummySensor
-from collections import deque
-from enum import Enum
+from common.math import RollingAverage, VelocityEstimator
+from sensors import SensorReading, get_accelerometer_instance
 
 
-if platform == "win":
-    accelerometer = DummySensor()
-else:
-    accelerometer = Accelerometer()
-
-
-def get_vec_info_str(header: str, vec: NDArray) -> str:
-    return f"{header}: " + " | ".join([f"{x:.3f}" for x in vec])
+accelerometer = get_accelerometer_instance()
 
 
 class MouseState(Enum):
@@ -55,7 +41,9 @@ class SensorReaderThread(threading.Thread):
         self.stop_signal = threading.Event()
 
     def stop(self):
-        """Signals the thread to stop collecting sensor data."""
+        """
+        Signals the thread to stop collecting sensor data.
+        """
         self.stop_signal.set()
 
     def run(self):
@@ -305,7 +293,7 @@ class MouseClientApp(App):
         )
 
     def build_settings(self, settings):
-        with open("settings.json", "r") as settings_json:
+        with open("config/settings.json", "r") as settings_json:
             settings.add_json_panel("Settings", self.config, data=settings_json.read())
 
     def on_config_change(self, config, section, key, value):
@@ -321,4 +309,6 @@ class MouseClientApp(App):
 
 
 if __name__ == "__main__":
-    MouseClientApp().run()
+    from ui.MouseClientApp import MouseClientApp
+    app = MouseClientApp()
+    app.run()

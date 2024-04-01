@@ -6,6 +6,7 @@ from typing import Any, Optional
 
 import numpy as np
 from kivy.logger import Logger
+from kivy.utils import platform
 from numpy.typing import NDArray
 from plyer import accelerometer, gyroscope
 
@@ -77,7 +78,7 @@ class Sensor:
 class Accelerometer(Sensor):
     def __init__(self):
         super().__init__(accelerometer, "acc")
-        self.calibrate("calibration.json")
+        self.calibrate("config/calibration.json")
 
     def read_raw(self):
         """
@@ -108,3 +109,10 @@ class Gyroscope(Sensor):
         Return gyroscope readings (roll, pitch, yaw) [ rad / s ]
         """
         return gyroscope.rotation[:3]
+
+
+def get_accelerometer_instance():
+    if platform == "win":
+        return DummySensor()
+    else:
+        return Accelerometer()

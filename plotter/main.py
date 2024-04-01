@@ -5,9 +5,8 @@ from pyqt_plotter import Plotter
 from config import PlotConfig
 
 from common.network_utils import parse_address
-import common.logger_config as logger_config
-logger = logger_config.get_logger(__name__)
-
+import common.logging as logging
+logger = logging.get_logger(__name__)
 
 
 class QueueManager(BaseManager):

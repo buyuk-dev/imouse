@@ -15,8 +15,8 @@ from common.command import Command
 from config import MouseServerConfig
 
 from common.network_utils import parse_address
-import common.logger_config as logger_config
-logger = logger_config.get_logger(__name__)
+import common.logging as logging
+logger = logging.get_logger(__name__)
 
 
 class QueueManager(BaseManager):
@@ -42,7 +42,7 @@ class MouseController:
         dx = int(command.move[0] * self.mouse_speed)
         dy = int(command.move[1] * self.mouse_speed)
 
-        self.mouse.move(dx, -dy)
+        #self.mouse.move(dx, -dy)
 
 
 class MouseServerApp:

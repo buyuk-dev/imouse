@@ -1,0 +1,14 @@
+#:kivy 2.3.0
+#:import SettingsView ui.SettingsView
+
+<SettingsView>:
+    name: 'settings'
+    BoxLayout:
+        orientation: 'vertical'
+        TextInput:
+            id: settings_input
+            text: ''
+            multiline: True
+        Button:
+            text: 'Save'
+            on_press: root.save_settings()

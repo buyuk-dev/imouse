@@ -6,9 +6,9 @@ Very inefficient, UI keeps hanging. Could improve it a bit but decided to rewrit
 visualisation using pyqtgraph package.
 """
 
-import common.logger_config as logger_config
+import common.logging as logging
 
-logger = logger_config.get_logger(__name__)
+logger = logging.get_logger(__name__)
 
 import matplotlib.pyplot as plt
 import numpy as np
